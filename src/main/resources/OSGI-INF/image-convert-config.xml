@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.image.customConfig">
+    <require>org.nuxeo.ecm.platform.commandline.executor.service.defaultContrib</require>
+    <require>org.nuxeo.ecm.platform.picture.ImagingComponent.default.config</require>
+
+    <extension target="org.nuxeo.ecm.platform.commandline.executor.service.CommandLineExecutorComponent"
+        point="command">
+        <command name="cmdLineResize" enabled="true">
+            <commandLine>convert</commandLine>
+            <parameterString>#{sourceFilePath} -resize #{newResolution} #{targetFilePath}
+            </parameterString>
+            <installationDirective>You need to install ImageMagick.
+            </installationDirective>
+        </command>
+    </extension>
+
+    <extension target="org.nuxeo.ecm.core.convert.service.ConversionServiceImpl" point="converter">
+        <converter name="cmdLineResize" class="org.nuxeo.ecm.platform.convert.plugins.CommandLineConverter">
+            <parameters>
+                <parameter name="CommandLineName">cmdLineResize</parameter>
+            </parameters>
+            <sourceMimeType>image/png</sourceMimeType>
+            <destinationMimeType>image/png</destinationMimeType>
+        </converter>
+    </extension>
+
+    <extension target="org.nuxeo.ecm.platform.picture.ImagingComponent" point="pictureConversions">
+      <pictureConversion id="Thumbnail" enabled="false" />
+      <pictureConversion id="Small" enabled="false" />
+      <pictureConversion id="Medium" enabled="false" />
+      <pictureConversion id="FullHD" enabled="false" />
+      <pictureConversion id="OriginalJpeg" enabled="false" />
+      <pictureConversion id="cmdLineResize" description="cmdLineResize" order="1000" chainId="cmdLineResize" default="true" rendition="true"/> 
+      <pictureConversion id="cmdLineResizeWithMaxSize" description="cmdLineResizeWithMaxSize" order="1001" chainId="cmdLineResize" default="true" rendition="true" maxSize="1000"/> 
+    </extension>
+
+    <extension target="org.nuxeo.ecm.core.operation.OperationServiceComponent" point="chains">
+        <chain id="cmdLineResize">
+            <operation id="Context.FetchFile"/>
+            <operation id="Blob.RunConverter">
+                <param type="string" name="converter">cmdLineResize</param>
+                <param type="properties" name="parameters">newResolution=3000x3000</param> 
+            </operation>
+        </chain>
+    </extension>
+</component>
